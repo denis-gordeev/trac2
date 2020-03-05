@@ -148,7 +148,7 @@ class MultiHeadClassification(BertPreTrainedModel):
         loss = 0
         for labels, logits, num_labels in (
             (labels_a, logits_a, self.num_labels_a),
-            (labels_b, logits_b, self.num_labels_a),
+            (labels_b, logits_b, self.num_labels_b),
         ):
             if labels is not None:
                 if num_labels == 1:
