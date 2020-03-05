@@ -670,8 +670,7 @@ def main():
         default=None,
         type=str,
         required=True,
-        help="Path to pre-trained model or shortcut name selected in the list: "
-        + ", ".join(ALL_MODELS),
+        help="Path to pre-trained model or shortcut name from HuggingFace
     )
     parser.add_argument(
         "--task_name",
