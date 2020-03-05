@@ -1,0 +1,14 @@
+!python run_classification.py \
+    --data_dir ./ \
+    --model_type bert \
+    --model_name_or_path bert-base-multilingual-uncased \
+    --task_name trac \
+    --output_dir trained-model \
+    --max_seq_length 128 \
+    --do_train \
+    --do_eval \
+    --evaluate_during_training \
+    --per_gpu_train_batch_size 16 \
+    --per_gpu_eval_batch_size 16 \
+    --num_train_epochs 3 \
+    --fp16
