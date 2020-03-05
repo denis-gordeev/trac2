@@ -593,7 +593,7 @@ def load_and_cache_examples(args, task, tokenizer, evaluate=False):
             examples,
             tokenizer,
             label_list=label_list,
-            max_length=args.max_seq_length,
+            max_seq_length=args.max_seq_length,
             output_mode=output_mode,
             pad_on_left=bool(
                 args.model_type in ["xlnet"]
