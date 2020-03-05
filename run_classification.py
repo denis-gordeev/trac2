@@ -510,7 +510,8 @@ def evaluate(args, model, tokenizer, prefix=""):
                 inputs = {
                     "input_ids": batch[0],
                     "attention_mask": batch[1],
-                    "labels": batch[3],
+                    "labels_a": batch[3],
+                    "labels_b": batch[4],
                 }
                 if args.model_type != "distilbert":
                     inputs["token_type_ids"] = (
