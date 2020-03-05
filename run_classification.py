@@ -34,7 +34,8 @@ from torch.utils.data import (
     TensorDataset,
 )
 from torch.utils.data.distributed import DistributedSampler
-from tqdm import tqdm, trange
+from tqdm import trange
+from tqdm.notebook import tqdm
 from transformers import (
     WEIGHTS_NAME,
     AdamW,
