@@ -527,32 +527,41 @@ def evaluate(args, model, tokenizer, prefix=""):
             nb_eval_steps += 1
             if preds is None:
                 preds = logits.detach().cpu().numpy()
-                out_label_ids = inputs["labels"].detach().cpu().numpy()
+                out_label_ids_a = inputs["labels_a"].detach().cpu().numpy()
+                out_label_ids_b = inputs["labels_b"].detach().cpu().numpy()
             else:
                 preds = np.append(preds, logits.detach().cpu().numpy(), axis=0)
-                out_label_ids = np.append(
+                out_label_ids_a = np.append(
                     out_label_ids,
-                    inputs["labels"].detach().cpu().numpy(),
+                    inputs["labels_a"].detach().cpu().numpy(),
                     axis=0,
                 )
+                out_label_ids_b = np.append(
+                    out_label_ids,
+                    inputs["labels_b"].detach().cpu().numpy(),
+                    axis=0,
+                )
+        try:
+            eval_loss = eval_loss / nb_eval_steps
+            if args.output_mode == "classification":
+                preds = np.argmax(preds, axis=1)
+            elif args.output_mode == "regression":
+                preds = np.squeeze(preds)
+            result_a = compute_metrics(eval_task, preds, out_label_ids_a)
+            result_b = compute_metrics(eval_task, preds, out_label_ids_b)
+            results.update(result_a)
+            results.update(result_b)
 
-        eval_loss = eval_loss / nb_eval_steps
-        if args.output_mode == "classification":
-            preds = np.argmax(preds, axis=1)
-        elif args.output_mode == "regression":
-            preds = np.squeeze(preds)
-        result = compute_metrics(eval_task, preds, out_label_ids)
-        results.update(result)
-
-        output_eval_file = os.path.join(
-            eval_output_dir, prefix, "eval_results.txt"
-        )
-        with open(output_eval_file, "w") as writer:
-            logger.info("***** Eval results {} *****".format(prefix))
-            for key in sorted(result.keys()):
-                logger.info("  %s = %s", key, str(result[key]))
-                writer.write("%s = %s\n" % (key, str(result[key])))
-
+            output_eval_file = os.path.join(
+                eval_output_dir, prefix, "eval_results.txt"
+            )
+            with open(output_eval_file, "w") as writer:
+                logger.info("***** Eval results {} *****".format(prefix))
+                for key in sorted(result.keys()):
+                    logger.info("  %s = %s", key, str(result[key]))
+                    writer.write("%s = %s\n" % (key, str(result[key])))
+        except Exception as ex:
+            print("evaluation", ex)
     return results
 
 
