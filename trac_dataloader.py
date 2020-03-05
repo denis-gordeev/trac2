@@ -188,7 +188,7 @@ def convert_examples_to_features(
             )
 
         assert len(input_ids) == max_seq_length
-        assert len(input_mask) == max_seq_length
+        assert len(attention_mask) == max_seq_length
         assert len(segment_ids) == max_seq_length
 
         if output_mode == "classification":
@@ -207,7 +207,7 @@ def convert_examples_to_features(
                 "input_ids: %s" % " ".join([str(x) for x in input_ids])
             )
             logger.info(
-                "input_mask: %s" % " ".join([str(x) for x in input_mask])
+                "input_mask: %s" % " ".join([str(x) for x in attention_mask])
             )
             logger.info(
                 "segment_ids: %s" % " ".join([str(x) for x in segment_ids])
@@ -217,7 +217,7 @@ def convert_examples_to_features(
         features.append(
             InputFeatures(
                 input_ids=input_ids,
-                input_mask=input_mask,
+                input_mask=attention_mask,
                 segment_ids=segment_ids,
                 label_a=label_a,
                 label_b=label_b,
