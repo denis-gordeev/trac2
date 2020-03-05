@@ -915,7 +915,8 @@ def main():
     processor = processors[args.task_name]()
     args.output_mode = output_modes[args.task_name]
     label_list = processor.get_labels()
-    num_labels = len(label_list)
+    num_labels_a = len(label_list["a"])
+    num_labels_b = len(label_list["b"])
 
     # Load pretrained model and tokenizer
     if args.local_rank not in [-1, 0]:
@@ -925,10 +926,11 @@ def main():
     config_class, model_class, tokenizer_class = MODEL_CLASSES[args.model_type]
     config = config_class.from_pretrained(
         args.config_name if args.config_name else args.model_name_or_path,
-        num_labels=num_labels,
         finetuning_task=args.task_name,
         cache_dir=args.cache_dir if args.cache_dir else None,
     )
+    config.num_labels_a = num_labels_a
+    config.num_labels_b = num_labels_b
     tokenizer = tokenizer_class.from_pretrained(
         args.tokenizer_name
         if args.tokenizer_name
