@@ -106,9 +106,9 @@ class TracProcessor(object):
 
 def convert_examples_to_features(
     examples,
+    tokenizer,
     label_list,
     max_seq_length,
-    tokenizer,
     output_mode,
     cls_token_at_end=False,
     pad_on_left=False,
