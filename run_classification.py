@@ -25,6 +25,8 @@ import random
 
 import numpy as np
 import torch
+from torch import nn
+from torch.nn import CrossEntropyLoss, MSELoss
 from torch.utils.data import (
     DataLoader,
     RandomSampler,
@@ -33,43 +35,22 @@ from torch.utils.data import (
 )
 from torch.utils.data.distributed import DistributedSampler
 from tqdm import tqdm, trange
-
 from transformers import (
     WEIGHTS_NAME,
     AdamW,
-    AlbertConfig,
-    AlbertForSequenceClassification,
-    AlbertTokenizer,
     BertConfig,
-    BertForSequenceClassification,
+    BertModel,
+    BertPreTrainedModel,
     BertTokenizer,
-    DistilBertConfig,
-    DistilBertForSequenceClassification,
-    DistilBertTokenizer,
-    FlaubertConfig,
-    FlaubertForSequenceClassification,
-    FlaubertTokenizer,
-    RobertaConfig,
-    RobertaForSequenceClassification,
-    RobertaTokenizer,
-    XLMConfig,
-    XLMForSequenceClassification,
-    XLMRobertaConfig,
-    XLMRobertaForSequenceClassification,
-    XLMRobertaTokenizer,
-    XLMTokenizer,
-    XLNetConfig,
-    XLNetForSequenceClassification,
-    XLNetTokenizer,
     get_linear_schedule_with_warmup,
 )
+
 from trac_dataloader import (
     compute_metrics,
     convert_examples_to_features,
     output_modes,
     processors,
 )
-
 
 try:
     from torch.utils.tensorboard import SummaryWriter
@@ -79,43 +60,108 @@ except ImportError:
 
 logger = logging.getLogger(__name__)
 
-ALL_MODELS = sum(
-    (
-        tuple(conf.pretrained_config_archive_map.keys())
-        for conf in (
-            BertConfig,
-            XLNetConfig,
-            XLMConfig,
-            RobertaConfig,
-            DistilBertConfig,
-            AlbertConfig,
-            XLMRobertaConfig,
-        )
-    ),
-    (),
-)
-
 MODEL_CLASSES = {
-    "bert": (BertConfig, BertForSequenceClassification, BertTokenizer),
-    "xlnet": (XLNetConfig, XLNetForSequenceClassification, XLNetTokenizer),
-    "xlm": (XLMConfig, XLMForSequenceClassification, XLMTokenizer),
-    "roberta": (
-        RobertaConfig,
-        RobertaForSequenceClassification,
-        RobertaTokenizer,
-    ),
-    "distilbert": (
-        DistilBertConfig,
-        DistilBertForSequenceClassification,
-        DistilBertTokenizer,
-    ),
-    "albert": (AlbertConfig, AlbertForSequenceClassification, AlbertTokenizer),
-    "xlmroberta": (
-        XLMRobertaConfig,
-        XLMRobertaForSequenceClassification,
-        XLMRobertaTokenizer,
-    ),
+    "bert": (BertConfig, BertForSequenceClassification, BertTokenizer)
 }
+
+
+class MultiHeadClassification(BertPreTrainedModel):
+    r"""
+        derived from BertForSequenceClassification
+        **labels**: (`optional`) ``torch.LongTensor`` of shape ``(batch_size,)``:
+            Labels for computing the sequence classification/regression loss.
+            Indices should be in ``[0, ..., config.num_labels - 1]``.
+            If ``config.num_labels == 1`` a regression loss is computed (Mean-Square loss),
+            If ``config.num_labels > 1`` a classification loss is computed (Cross-Entropy).
+
+    Outputs: `Tuple` comprising various elements depending on the configuration (config) and inputs:
+        **loss**: (`optional`, returned when ``labels`` is provided) ``torch.FloatTensor`` of shape ``(1,)``:
+            Classification (or regression if config.num_labels==1) loss.
+        **logits**: ``torch.FloatTensor`` of shape ``(batch_size, config.num_labels)``
+            Classification (or regression if config.num_labels==1) scores (before SoftMax).
+        **hidden_states**: (`optional`, returned when ``config.output_hidden_states=True``)
+            list of ``torch.FloatTensor`` (one for the output of each layer + the output of the embeddings)
+            of shape ``(batch_size, sequence_length, hidden_size)``:
+            Hidden-states of the model at the output of each layer plus the initial embedding outputs.
+        **attentions**: (`optional`, returned when ``config.output_attentions=True``)
+            list of ``torch.FloatTensor`` (one for each layer) of shape ``(batch_size, num_heads, sequence_length, sequence_length)``:
+            Attentions weights after the attention softmax, used to compute the weighted average in the self-attention heads.
+
+    Examples::
+
+        tokenizer = BertTokenizer.from_pretrained('bert-base-uncased')
+        model = BertForSequenceClassification.from_pretrained('bert-base-uncased')
+        input_ids = torch.tensor(tokenizer.encode("Hello, my dog is cute")).unsqueeze(0)  # Batch size 1
+        labels = torch.tensor([1]).unsqueeze(0)  # Batch size 1
+        outputs = model(input_ids, labels=labels)
+        loss, logits = outputs[:2]
+
+    """
+
+    def __init__(self, config):
+        super(MultiHeadClassification, self).__init__(config)
+        self.num_labels_a = config.num_labels_a
+        self.num_labels_b = config.num_labels_b
+
+        self.bert = BertModel(config)
+        self.dropout = nn.Dropout(config.hidden_dropout_prob)
+        self.classifier_a = nn.Linear(
+            config.hidden_size, self.config.num_labels_a
+        )
+        self.classifier_b = nn.Linear(
+            config.hidden_size, self.config.num_labels_b
+        )
+
+        self.init_weights()
+
+    def forward(
+        self,
+        input_ids=None,
+        attention_mask=None,
+        token_type_ids=None,
+        position_ids=None,
+        head_mask=None,
+        inputs_embeds=None,
+        labels_a=None,
+        labels_b=None,
+    ):
+
+        outputs = self.bert(
+            input_ids,
+            attention_mask=attention_mask,
+            token_type_ids=token_type_ids,
+            position_ids=position_ids,
+            head_mask=head_mask,
+            inputs_embeds=inputs_embeds,
+        )
+
+        pooled_output = outputs[1]
+
+        pooled_output = self.dropout(pooled_output)
+        logits_a = self.classifier_a(pooled_output)
+        logits_b = self.classifier_b(pooled_output)
+
+        outputs = (
+            (logits_a,) + (logits_b,) + outputs[2:]
+        )  # add hidden states and attention if they are here
+
+        loss = 0
+        for labels, logits, num_labels in (
+            (labels_a, logits_a, self.num_labels_a),
+            (labels_b, logits_b, self.num_labels_a),
+        ):
+            if labels is not None:
+                if num_labels == 1:
+                    #  We are doing regression
+                    loss_fct = MSELoss()
+                    loss += loss_fct(logits_a.view(-1), labels_a.view(-1))
+                else:
+                    loss_fct = CrossEntropyLoss()
+                    loss += loss_fct(
+                        logits.view(-1, num_labels), labels.view(-1)
+                    )
+        outputs = (loss,) + outputs
+        return outputs  # (loss), logits, (hidden_states), (attentions)
 
 
 def set_seed(args):
@@ -300,7 +346,8 @@ def train(args, train_dataset, model, tokenizer):
             inputs = {
                 "input_ids": batch[0],
                 "attention_mask": batch[1],
-                "labels": batch[3],
+                "labels_a": batch[3],
+                "labels_b": batch[4],
             }
             if args.model_type != "distilbert":
                 inputs["token_type_ids"] = (
@@ -570,22 +617,31 @@ def load_and_cache_examples(args, task, tokenizer, evaluate=False):
         [f.input_ids for f in features], dtype=torch.long
     )
     all_attention_mask = torch.tensor(
-        [f.attention_mask for f in features], dtype=torch.long
+        [f.input_mask for f in features], dtype=torch.long
     )
     all_token_type_ids = torch.tensor(
-        [f.token_type_ids for f in features], dtype=torch.long
+        [f.segment_ids for f in features], dtype=torch.long
     )
     if output_mode == "classification":
-        all_labels = torch.tensor(
-            [f.label for f in features], dtype=torch.long
+        all_labels_a = torch.tensor(
+            [f.label_a for f in features], dtype=torch.long
+        )
+        all_labels_b = torch.tensor(
+            [f.label_b for f in features], dtype=torch.long
         )
     elif output_mode == "regression":
-        all_labels = torch.tensor(
-            [f.label for f in features], dtype=torch.float
+        all_labels_a = torch.tensor(
+            [f.label_a for f in features], dtype=torch.float
         )
-
+        all_labels_b = torch.tensor(
+            [f.label_b for f in features], dtype=torch.float
+        )
     dataset = TensorDataset(
-        all_input_ids, all_attention_mask, all_token_type_ids, all_labels
+        all_input_ids,
+        all_attention_mask,
+        all_token_type_ids,
+        all_labels_a,
+        all_labels_b,
     )
     return dataset
 
@@ -880,7 +936,7 @@ def main():
         do_lower_case=args.do_lower_case,
         cache_dir=args.cache_dir if args.cache_dir else None,
     )
-    model = model_class.from_pretrained(
+    model = MultiHeadClassification.from_pretrained(
         args.model_name_or_path,
         from_tf=bool(".ckpt" in args.model_name_or_path),
         config=config,

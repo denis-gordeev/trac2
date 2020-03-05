@@ -115,8 +115,7 @@ def convert_examples_to_features(
     cls_token="[CLS]",
     sep_token="[SEP]",
     pad_token=0,
-    sequence_a_segment_id=0,
-    sequence_b_segment_id=1,
+    sequence_segment_id=0,
     cls_token_segment_id=1,
     pad_token_segment_id=0,
     mask_padding_with_zero=True,
@@ -158,7 +157,7 @@ def convert_examples_to_features(
         # used as as the "sentence vector". Note that this only makes sense because
         # the entire model is fine-tuned.
         tokens = tokens + [sep_token]
-        segment_ids = [sequence_a_segment_id] * len(tokens)
+        segment_ids = [sequence_segment_id] * len(tokens)
 
         if cls_token_at_end:
             tokens = tokens + [cls_token]
@@ -167,27 +166,23 @@ def convert_examples_to_features(
             tokens = [cls_token] + tokens
             segment_ids = [cls_token_segment_id] + segment_ids
 
-        input_ids = tokenizer.convert_tokens_to_ids(tokens)
+        # padding_length = max_seq_length - len(input_ids)
+        sequence_a_dict = tokenizer.encode_plus(
+            tokens, max_length=max_seq_length, pad_to_max_length=True
+        )
+        input_ids = sequence_a_dict["input_ids"]
 
         # The mask has 1 for real tokens and 0 for padding tokens. Only real
         # tokens are attended to.
-        input_mask = [1 if mask_padding_with_zero else 0] * len(input_ids)
+        attention_mask = sequence_a_dict["attention_mask"]
 
         # Zero-pad up to the sequence length.
-        padding_length = max_seq_length - len(input_ids)
+        padding_length = max_seq_length - len(segment_ids)
         if pad_on_left:
-            input_ids = ([pad_token] * padding_length) + input_ids
-            input_mask = (
-                [0 if mask_padding_with_zero else 1] * padding_length
-            ) + input_mask
             segment_ids = (
                 [pad_token_segment_id] * padding_length
             ) + segment_ids
         else:
-            input_ids = input_ids + ([pad_token] * padding_length)
-            input_mask = input_mask + (
-                [0 if mask_padding_with_zero else 1] * padding_length
-            )
             segment_ids = segment_ids + (
                 [pad_token_segment_id] * padding_length
             )
@@ -270,7 +265,7 @@ def pearson_and_spearman(preds, labels):
 
 def compute_metrics(task_name, preds, labels):
     assert len(preds) == len(labels)
-    if task_name in {"imdb", "quora"}:
+    if task_name in {"imdb", "quora", "trac"}:
         return acc_and_f1(preds, labels)
     else:
         raise KeyError(task_name)
@@ -279,5 +274,3 @@ def compute_metrics(task_name, preds, labels):
 processors = {"trac": TracProcessor}
 
 output_modes = {"trac": "classification"}
-
-task_labels = {"neg": "0", "pos": "1"}
