@@ -22,6 +22,7 @@ import json
 import logging
 import os
 import random
+import traceback
 
 import numpy as np
 import torch
@@ -34,7 +35,7 @@ from torch.utils.data import (
     TensorDataset,
 )
 from torch.utils.data.distributed import DistributedSampler
-from tqdm import trange, tqdm
+from tqdm import tqdm, trange
 from transformers import (
     WEIGHTS_NAME,
     AdamW,
@@ -60,9 +61,7 @@ except ImportError:
 
 logger = logging.getLogger(__name__)
 
-MODEL_CLASSES = {
-    "bert": (BertConfig, BertPreTrainedModel, BertTokenizer)
-}
+MODEL_CLASSES = {"bert": (BertConfig, BertPreTrainedModel, BertTokenizer)}
 
 
 class MultiHeadClassification(BertPreTrainedModel):
@@ -124,6 +123,8 @@ class MultiHeadClassification(BertPreTrainedModel):
         inputs_embeds=None,
         labels_a=None,
         labels_b=None,
+        *args,
+        **kwargs
     ):
 
         outputs = self.bert(
@@ -530,7 +531,9 @@ def evaluate(args, model, tokenizer, prefix=""):
                     out_label_ids_a = inputs["labels_a"].detach().cpu().numpy()
                     out_label_ids_b = inputs["labels_b"].detach().cpu().numpy()
                 else:
-                    preds = np.append(preds, logits.detach().cpu().numpy(), axis=0)
+                    preds = np.append(
+                        preds, logits.detach().cpu().numpy(), axis=0
+                    )
                     out_label_ids_a = np.append(
                         out_label_ids_a,
                         inputs["labels_a"].detach().cpu().numpy(),
@@ -543,6 +546,7 @@ def evaluate(args, model, tokenizer, prefix=""):
                     )
             except Exception as ex:
                 print(ex, "evaluate")
+                traceback.print_stack()
         try:
             eval_loss = eval_loss / nb_eval_steps
             if args.output_mode == "classification":
@@ -563,6 +567,7 @@ def evaluate(args, model, tokenizer, prefix=""):
                     logger.info("  %s = %s", key, str(result[key]))
                     writer.write("%s = %s\n" % (key, str(result[key])))
         except Exception as ex:
+            traceback.print_stack()
             print("evaluation", ex)
     return results
 
@@ -683,7 +688,7 @@ def main():
         default=None,
         type=str,
         required=True,
-        help="Path to pre-trained model or shortcut name from HuggingFace"
+        help="Path to pre-trained model or shortcut name from HuggingFace",
     )
     parser.add_argument(
         "--task_name",

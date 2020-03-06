@@ -17,18 +17,13 @@
 
 from __future__ import absolute_import, division, print_function
 
-import csv
-import enum
 import logging
-import os
-import sys
 from dataclasses import dataclass
-from io import open
-from typing import Optional, Union, List
+from typing import List, Optional, Union
 
 import pandas as pd
 from scipy.stats import pearsonr, spearmanr
-from sklearn.metrics import f1_score, matthews_corrcoef
+from sklearn.metrics import f1_score
 
 logger = logging.getLogger(__name__)
 
@@ -247,9 +242,9 @@ def simple_accuracy(preds, labels):
     return (preds == labels).mean()
 
 
-def acc_and_f1(preds, labels):
+def acc_and_f1(preds, labels, average="micro"):
     acc = simple_accuracy(preds, labels)
-    f1 = f1_score(y_true=labels, y_pred=preds)
+    f1 = f1_score(y_true=labels, y_pred=preds, average=average)
     return {"acc": acc, "f1": f1, "acc_and_f1": (acc + f1) / 2}
 
 
