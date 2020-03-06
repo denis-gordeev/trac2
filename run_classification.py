@@ -592,6 +592,8 @@ def evaluate(args, model, tokenizer, prefix=""):
                 preds = np.squeeze(preds)
             result_a = compute_metrics(eval_task, preds, out_label_ids_a)
             result_b = compute_metrics(eval_task, preds, out_label_ids_b)
+            result_a = {k + "_a": v for k, v in result_a.items()}
+            result_b = {k + "_b": v for k, v in result_a.items()}
             results.update(result_a)
             results.update(result_b)
 
