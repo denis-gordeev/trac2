@@ -122,7 +122,7 @@ class MultiHeadClassification(BertPreTrainedModel):
     """
 
     def __init__(self, config):
-        super(MultiHeadClassification, self).__init__(config)
+        super().__init__(config)
         self.num_labels_a = config.num_labels_a
         self.num_labels_b = config.num_labels_b
 
@@ -1074,7 +1074,7 @@ def main():
                 else ""
             )
 
-            model = model_class.from_pretrained(checkpoint)
+            model = MultiHeadClassification.from_pretrained(checkpoint)
             model.to(args.device)
             try:
                 result = evaluate(args, model, tokenizer, prefix=prefix)
@@ -1086,6 +1086,7 @@ def main():
             except Exception as ex:
                 print(ex, "main-evaluate")
                 traceback.print_stack()
+    logger.info("trained")
     return results
 
 
