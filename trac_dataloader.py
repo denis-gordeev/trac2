@@ -1,5 +1,6 @@
 # coding=utf-8
-# Copyright 2018 The Google AI Language Team Authors and The HuggingFace Inc. team.
+# Copyright 2018 The Google AI Language Team Authors and
+# The HuggingFace Inc. team.
 # Copyright (c) 2018, NVIDIA CORPORATION.  All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -196,18 +197,24 @@ def convert_examples_to_features(
 
         if ex_index < 0:
             logger.info("*** Example ***")
-            logger.info("guid: %s" % (example.guid))
-            logger.info("tokens: %s" % " ".join([str(x) for x in tokens]))
+            logger.info("guid: {}".format(example.guid))
             logger.info(
-                "input_ids: %s" % " ".join([str(x) for x in input_ids])
+                "tokens: {}".format(" ".join([str(x) for x in tokens]))
             )
             logger.info(
-                "input_mask: %s" % " ".join([str(x) for x in attention_mask])
+                "input_ids: {}".format(" ".join([str(x) for x in input_ids]))
             )
             logger.info(
-                "segment_ids: %s" % " ".join([str(x) for x in segment_ids])
+                "input_mask: {}".format(
+                    " ".join([str(x) for x in attention_mask])
+                )
             )
-            logger.info("label: %s (id = %d)" % (example.label, label_id))
+            logger.info(
+                "segment_ids: {}".format(
+                    " ".join([str(x) for x in segment_ids])
+                )
+            )
+            logger.info("label: {} (id = {})".format(example.label, label_id))
 
         features.append(
             InputFeatures(

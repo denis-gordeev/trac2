@@ -1,5 +1,6 @@
 # coding=utf-8
-# Copyright 2018 The Google AI Language Team Authors and The HuggingFace Inc. team.
+# Copyright 2018 The Google AI Language Team Authors and
+# The HuggingFace Inc. team.
 # Copyright (c) 2018, NVIDIA CORPORATION.  All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -13,7 +14,8 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-""" Finetuning the library models for sequence classification on GLUE (Bert, XLM, XLNet, RoBERTa, Albert, XLM-RoBERTa)."""
+"""Finetuning the library models for sequence classification on TRAC
+(Bert, XLM, XLNet, RoBERTa, Albert, XLM-RoBERTa)."""
 
 
 import argparse
@@ -31,7 +33,9 @@ from torch.nn import CrossEntropyLoss, MSELoss
 from torch.utils.data import (DataLoader, RandomSampler, SequentialSampler,
                               TensorDataset)
 from torch.utils.data.distributed import DistributedSampler
-from tqdm import tqdm, trange
+# Replaced this `from tqdm import tqdm, trange`
+# !pip install --force https://github.com/chengs/tqdm/archive/colab.zip
+from tqdm.autonotebook import tqdm, trange
 from transformers import (WEIGHTS_NAME, AdamW, BertConfig, BertModel,
                           BertPreTrainedModel, BertTokenizer,
                           get_linear_schedule_with_warmup)
@@ -53,30 +57,49 @@ MODEL_CLASSES = {"bert": (BertConfig, BertPreTrainedModel, BertTokenizer)}
 class MultiHeadClassification(BertPreTrainedModel):
     r"""
         derived from BertForSequenceClassification
-        **labels**: (`optional`) ``torch.LongTensor`` of shape ``(batch_size,)``:
+        **labels**: (`optional`) ``torch.LongTensor`` of shape
+            ``(batch_size,)``:
             Labels for computing the sequence classification/regression loss.
             Indices should be in ``[0, ..., config.num_labels - 1]``.
-            If ``config.num_labels == 1`` a regression loss is computed (Mean-Square loss),
-            If ``config.num_labels > 1`` a classification loss is computed (Cross-Entropy).
+            If ``config.num_labels == 1`` a regression loss is
+                computed (Mean-Square loss),
+            If ``config.num_labels > 1`` a classification loss is
+                computed (Cross-Entropy).
 
-    Outputs: `Tuple` comprising various elements depending on the configuration (config) and inputs:
-        **loss**: (`optional`, returned when ``labels`` is provided) ``torch.FloatTensor`` of shape ``(1,)``:
+    Outputs: `Tuple` comprising various elements depending on the configuration
+            (config) and inputs:
+        **loss**: (`optional`, returned when ``labels`` is provided)
+                ``torch.FloatTensor`` of shape ``(1,)``:
             Classification (or regression if config.num_labels==1) loss.
-        **logits**: ``torch.FloatTensor`` of shape ``(batch_size, config.num_labels)``
-            Classification (or regression if config.num_labels==1) scores (before SoftMax).
-        **hidden_states**: (`optional`, returned when ``config.output_hidden_states=True``)
-            list of ``torch.FloatTensor`` (one for the output of each layer + the output of the embeddings)
+
+        **logits**: ``torch.FloatTensor`` of shape
+                ``(batch_size, config.num_labels)``
+            Classification (or regression if config.num_labels==1) scores
+                (before SoftMax).
+
+        **hidden_states**: (`optional`, returned when
+                ``config.output_hidden_states=True``)
+            list of ``torch.FloatTensor``
+                (one for the output of each layer +
+                 the output of the embeddings)
             of shape ``(batch_size, sequence_length, hidden_size)``:
-            Hidden-states of the model at the output of each layer plus the initial embedding outputs.
-        **attentions**: (`optional`, returned when ``config.output_attentions=True``)
-            list of ``torch.FloatTensor`` (one for each layer) of shape ``(batch_size, num_heads, sequence_length, sequence_length)``:
-            Attentions weights after the attention softmax, used to compute the weighted average in the self-attention heads.
+            Hidden-states of the model at the output of each layer plus
+                the initial embedding outputs.
+        **attentions**: (`optional`, returned when
+                ``config.output_attentions=True``)
+            list of ``torch.FloatTensor`` (one for each layer) of shape
+                ``(batch_size, num_heads, sequence_length, sequence_length)``:
+            Attentions weights after the attention softmax, used to compute
+                the weighted average in the self-attention heads.
 
     Examples::
 
         tokenizer = BertTokenizer.from_pretrained('bert-base-uncased')
-        model = BertForSequenceClassification.from_pretrained('bert-base-uncased')
-        input_ids = torch.tensor(tokenizer.encode("Hello, my dog is cute")).unsqueeze(0)  # Batch size 1
+        model = BertForSequenceClassification.from_pretrained(
+            'bert-base-uncased')
+        input_ids = torch.tensor(
+            tokenizer.encode(
+                "Hello, my dog is cute")).unsqueeze(0)  # Batch size 1
         labels = torch.tensor([1]).unsqueeze(0)  # Batch size 1
         outputs = model(input_ids, labels=labels)
         loss, logits = outputs[:2]
@@ -160,7 +183,7 @@ def set_seed(args):
 
 
 def train(args, train_dataset, model, tokenizer):
-    """ Train the model """
+    """Train the model."""
     if args.local_rank in [-1, 0]:
         tb_writer = SummaryWriter()
 
@@ -239,7 +262,8 @@ def train(args, train_dataset, model, tokenizer):
             from apex import amp
         except ImportError:
             raise ImportError(
-                "Please install apex from https://www.github.com/nvidia/apex to use fp16 training."
+                "Please install apex from "
+                + "https://www.github.com/nvidia/apex to use fp16 training."
             )
         model, optimizer = amp.initialize(
             model, optimizer, opt_level=args.fp16_opt_level
@@ -267,7 +291,8 @@ def train(args, train_dataset, model, tokenizer):
         args.per_gpu_train_batch_size,
     )
     logger.info(
-        "  Total train batch size (w. parallel, distributed & accumulation) = %d",
+        "  Total train batch size"
+        + "(w. parallel, distributed & accumulation) = %d",
         args.train_batch_size
         * args.gradient_accumulation_steps
         * (torch.distributed.get_world_size() if args.local_rank != -1 else 1),
@@ -282,7 +307,8 @@ def train(args, train_dataset, model, tokenizer):
     steps_trained_in_current_epoch = 0
     # Check if continuing training from a checkpoint
     if os.path.exists(args.model_name_or_path):
-        # set global_step to global_step of last saved checkpoint from model path
+        # set global_step to global_step of last saved checkpoint
+        # from model path
         try:
             global_step = int(
                 args.model_name_or_path.split("-")[-1].split("/")[0]
@@ -297,7 +323,8 @@ def train(args, train_dataset, model, tokenizer):
         )
 
         logger.info(
-            "  Continuing training from checkpoint, will skip to saved global_step"
+            "  Continuing training from checkpoint, will skip"
+            + "to saved global_step"
         )
         logger.info("  Continuing training from epoch %d", epochs_trained)
         logger.info("  Continuing training from global step %d", global_step)
@@ -312,14 +339,14 @@ def train(args, train_dataset, model, tokenizer):
         epochs_trained,
         int(args.num_train_epochs),
         desc="Epoch",
-        disable=args.local_rank not in [-1, 0],
+        disable=args.local_rank not in {-1, 0},
     )
     set_seed(args)  # Added here for reproductibility
     for _ in train_iterator:
         epoch_iterator = tqdm(
             train_dataloader,
             desc="Iteration",
-            disable=args.local_rank not in [-1, 0],
+            disable=args.local_rank not in {-1, 0},
         )
         for step, batch in enumerate(epoch_iterator):
 
@@ -337,11 +364,13 @@ def train(args, train_dataset, model, tokenizer):
                 "labels_b": batch[4],
             }
             if args.model_type != "distilbert":
+                # XLM, DistilBERT, RoBERTa, and XLM-RoBERTa
+                # don't use segment_ids
                 inputs["token_type_ids"] = (
                     batch[2]
                     if args.model_type in ["bert", "xlnet", "albert"]
                     else None
-                )  # XLM, DistilBERT, RoBERTa, and XLM-RoBERTa don't use segment_ids
+                )
             outputs = model(**inputs)
             loss = outputs[
                 0
@@ -384,7 +413,8 @@ def train(args, train_dataset, model, tokenizer):
                     logs = {}
                     if (
                         args.local_rank == -1 and args.evaluate_during_training
-                    ):  # Only evaluate when single GPU otherwise metrics may not average well
+                    ):  # Only evaluate when single GPU
+                        # otherwise metrics may not average well
                         results = evaluate(args, model, tokenizer)
                         for key, value in results.items():
                             eval_key = "eval_{}".format(key)
@@ -465,7 +495,7 @@ def evaluate(args, model, tokenizer, prefix=""):
             args, eval_task, tokenizer, evaluate=True
         )
 
-        if not os.path.exists(eval_output_dir) and args.local_rank in [-1, 0]:
+        if not os.path.exists(eval_output_dir) and args.local_rank in {-1, 0}:
             os.makedirs(eval_output_dir)
 
         args.eval_batch_size = args.per_gpu_eval_batch_size * max(
@@ -502,11 +532,13 @@ def evaluate(args, model, tokenizer, prefix=""):
                         "labels_b": batch[4],
                     }
                     if args.model_type != "distilbert":
+                        # XLM, DistilBERT, RoBERTa,
+                        # and XLM-RoBERTa don't use segment_ids
                         inputs["token_type_ids"] = (
                             batch[2]
                             if args.model_type in ["bert", "xlnet", "albert"]
                             else None
-                        )  # XLM, DistilBERT, RoBERTa, and XLM-RoBERTa don't use segment_ids
+                        )
                     outputs = model(**inputs)
                     tmp_eval_loss, logits = outputs[:2]
 
