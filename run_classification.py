@@ -28,30 +28,16 @@ import numpy as np
 import torch
 from torch import nn
 from torch.nn import CrossEntropyLoss, MSELoss
-from torch.utils.data import (
-    DataLoader,
-    RandomSampler,
-    SequentialSampler,
-    TensorDataset,
-)
+from torch.utils.data import (DataLoader, RandomSampler, SequentialSampler,
+                              TensorDataset)
 from torch.utils.data.distributed import DistributedSampler
 from tqdm import tqdm, trange
-from transformers import (
-    WEIGHTS_NAME,
-    AdamW,
-    BertConfig,
-    BertModel,
-    BertPreTrainedModel,
-    BertTokenizer,
-    get_linear_schedule_with_warmup,
-)
+from transformers import (WEIGHTS_NAME, AdamW, BertConfig, BertModel,
+                          BertPreTrainedModel, BertTokenizer,
+                          get_linear_schedule_with_warmup)
 
-from trac_dataloader import (
-    compute_metrics,
-    convert_examples_to_features,
-    output_modes,
-    processors,
-)
+from trac_dataloader import (compute_metrics, convert_examples_to_features,
+                             output_modes, processors)
 
 try:
     from torch.utils.tensorboard import SummaryWriter
@@ -124,7 +110,7 @@ class MultiHeadClassification(BertPreTrainedModel):
         labels_a=None,
         labels_b=None,
         *args,
-        **kwargs
+        **kwargs,
     ):
 
         outputs = self.bert(
@@ -563,9 +549,12 @@ def evaluate(args, model, tokenizer, prefix=""):
             )
             with open(output_eval_file, "w") as writer:
                 logger.info("***** Eval results {} *****".format(prefix))
-                for key in sorted(result.keys()):
-                    logger.info("  %s = %s", key, str(result[key]))
-                    writer.write("%s = %s\n" % (key, str(result[key])))
+                for key in sorted(result_a.keys()):
+                    logger.info("  %s = %s", key, str(result_a[key]))
+                    writer.write("%s = %s\n" % (key, str(result_a[key])))
+                for key in sorted(result_b.keys()):
+                    logger.info("  %s = %s", key, str(result_b[key]))
+                    writer.write("%s = %s\n" % (key, str(result_b[key])))
         except Exception as ex:
             traceback.print_stack()
             print("evaluation", ex)
@@ -1046,4 +1035,8 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    try:
+        main()
+    except Exception as ex:
+        print(ex, "main")
+        traceback.print_stack()
