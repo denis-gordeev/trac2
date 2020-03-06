@@ -30,18 +30,33 @@ import numpy as np
 import torch
 from torch import nn
 from torch.nn import CrossEntropyLoss, MSELoss
-from torch.utils.data import (DataLoader, RandomSampler, SequentialSampler,
-                              TensorDataset)
+from torch.utils.data import (
+    DataLoader,
+    RandomSampler,
+    SequentialSampler,
+    TensorDataset,
+)
 from torch.utils.data.distributed import DistributedSampler
+
 # Replaced this `from tqdm import tqdm, trange`
 # !pip install --force https://github.com/chengs/tqdm/archive/colab.zip
 from tqdm.autonotebook import tqdm, trange
-from transformers import (WEIGHTS_NAME, AdamW, BertConfig, BertModel,
-                          BertPreTrainedModel, BertTokenizer,
-                          get_linear_schedule_with_warmup)
+from transformers import (
+    WEIGHTS_NAME,
+    AdamW,
+    BertConfig,
+    BertModel,
+    BertPreTrainedModel,
+    BertTokenizer,
+    get_linear_schedule_with_warmup,
+)
 
-from trac_dataloader import (compute_metrics, convert_examples_to_features,
-                             output_modes, processors)
+from trac_dataloader import (
+    compute_metrics,
+    convert_examples_to_features,
+    output_modes,
+    processors,
+)
 
 try:
     from torch.utils.tensorboard import SummaryWriter
@@ -415,7 +430,11 @@ def train(args, train_dataset, model, tokenizer):
                         args.local_rank == -1 and args.evaluate_during_training
                     ):  # Only evaluate when single GPU
                         # otherwise metrics may not average well
-                        results = evaluate(args, model, tokenizer)
+                        try:
+                            results = evaluate(args, model, tokenizer)
+                        except Exception as ex:
+                            print(ex, "train-evaluate")
+                            traceback.print_stack()
                         for key, value in results.items():
                             eval_key = "eval_{}".format(key)
                             logs[eval_key] = value
@@ -1057,12 +1076,16 @@ def main():
 
             model = model_class.from_pretrained(checkpoint)
             model.to(args.device)
-            result = evaluate(args, model, tokenizer, prefix=prefix)
-            result = dict(
-                (k + "_{}".format(global_step), v) for k, v in result.items()
-            )
-            results.update(result)
-
+            try:
+                result = evaluate(args, model, tokenizer, prefix=prefix)
+                result = dict(
+                    (k + "_{}".format(global_step), v)
+                    for k, v in result.items()
+                )
+                results.update(result)
+            except Exception as ex:
+                print(ex, "main-evaluate")
+                traceback.print_stack()
     return results
 
 
