@@ -507,12 +507,16 @@ def evaluate(args, model, tokenizer, prefix=""):
         if args.task_name == "mnli"
         else (args.output_dir,)
     )
-
     results = {}
     for eval_task, eval_output_dir in zip(eval_task_names, eval_outputs_dirs):
-        eval_dataset = load_and_cache_examples(
-            args, eval_task, tokenizer, evaluate=True
-        )
+        if args.do_eval:
+            eval_dataset = load_and_cache_examples(
+                args, eval_task, tokenizer, "dev"
+            )
+        else:
+            eval_dataset = load_and_cache_examples(
+                args, eval_task, tokenizer, "test"
+            )
 
         if not os.path.exists(eval_output_dir) and args.local_rank in {-1, 0}:
             os.makedirs(eval_output_dir)
@@ -590,31 +594,38 @@ def evaluate(args, model, tokenizer, prefix=""):
                 preds = np.argmax(preds, axis=1)
             elif args.output_mode == "regression":
                 preds = np.squeeze(preds)
-            result_a = compute_metrics(eval_task, preds, out_label_ids_a)
-            result_b = compute_metrics(eval_task, preds, out_label_ids_b)
-            result_a = {k + "_a": v for k, v in result_a.items()}
-            result_b = {k + "_b": v for k, v in result_b.items()}
-            results.update(result_a)
-            results.update(result_b)
-
-            output_eval_file = os.path.join(
-                eval_output_dir, prefix, "eval_results.txt"
+            if args.do_eval:
+                result_a = compute_metrics(eval_task, preds, out_label_ids_a)
+                result_b = compute_metrics(eval_task, preds, out_label_ids_b)
+                result_a = {k + "_a": v for k, v in result_a.items()}
+                result_b = {k + "_b": v for k, v in result_b.items()}
+                results.update(result_a)
+                results.update(result_b)
+            if args.do_eval:
+                output_eval_file = os.path.join(
+                    eval_output_dir, prefix, "eval_results.txt"
+                )
+                with open(output_eval_file, "w") as writer:
+                    logger.info("***** Eval results {} *****".format(prefix))
+                    for key in sorted(result_a.keys()):
+                        logger.info("  %s = %s", key, str(result_a[key]))
+                        writer.write("%s = %s\n" % (key, str(result_a[key])))
+                    for key in sorted(result_b.keys()):
+                        logger.info("  %s = %s", key, str(result_b[key]))
+                        writer.write("%s = %s\n" % (key, str(result_b[key])))
+            output_test_predictions_file = os.path.join(
+                args.output_dir, "test_predictions.txt"
             )
-            with open(output_eval_file, "w") as writer:
-                logger.info("***** Eval results {} *****".format(prefix))
-                for key in sorted(result_a.keys()):
-                    logger.info("  %s = %s", key, str(result_a[key]))
-                    writer.write("%s = %s\n" % (key, str(result_a[key])))
-                for key in sorted(result_b.keys()):
-                    logger.info("  %s = %s", key, str(result_b[key]))
-                    writer.write("%s = %s\n" % (key, str(result_b[key])))
+            with open(output_test_predictions_file, "w") as f:
+                str_preds = "\n".join([str(p) for p in preds])
+                f.write(str_preds)
         except Exception as ex:
             traceback.print_stack()
             print("evaluation", ex)
     return results
 
 
-def load_and_cache_examples(args, task, tokenizer, evaluate=False):
+def load_and_cache_examples(args, task, tokenizer, mode):
     if args.local_rank not in [-1, 0] and not evaluate:
         torch.distributed.barrier()  # Make sure only the first process in distributed training process the dataset, and the others will use the cache
 
@@ -624,7 +635,7 @@ def load_and_cache_examples(args, task, tokenizer, evaluate=False):
     cached_features_file = os.path.join(
         args.data_dir,
         "cached_{}_{}_{}_{}".format(
-            "dev" if evaluate else "train",
+            mode,
             list(filter(None, args.model_name_or_path.split("/"))).pop(),
             str(args.max_seq_length),
             str(task),
@@ -644,11 +655,8 @@ def load_and_cache_examples(args, task, tokenizer, evaluate=False):
         ]:
             # HACK(label indices are swapped in RoBERTa pretrained model)
             label_list[1], label_list[2] = label_list[2], label_list[1]
-        examples = (
-            processor.get_examples(args.data_dir, "dev")
-            if evaluate
-            else processor.get_examples(args.data_dir, "train")
-        )
+        folder_list = args.get("folder_list")
+        examples = processor.get_examples(args.data_dir, mode, folder_list)
         features = convert_examples_to_features(
             examples,
             tokenizer,
@@ -747,7 +755,14 @@ def main():
         required=True,
         help="The output directory where the model predictions and checkpoints will be written.",
     )
-
+    parser.add_argument(
+        "--folder_list",
+        default=None,
+        type=str,
+        nargs="*",
+        required=False,
+        help="The folder list",
+    )
     # Other parameters
     parser.add_argument(
         "--config_name",
@@ -781,6 +796,11 @@ def main():
         "--do_eval",
         action="store_true",
         help="Whether to run eval on the dev set.",
+    )
+    parser.add_argument(
+        "--do_predict",
+        action="store_true",
+        help="Whether to run prediction on the test set.",
     )
     parser.add_argument(
         "--evaluate_during_training",
@@ -1014,7 +1034,7 @@ def main():
     # Training
     if args.do_train:
         train_dataset = load_and_cache_examples(
-            args, args.task_name, tokenizer, evaluate=False
+            args, args.task_name, tokenizer, "train"
         )
         global_step, tr_loss = train(args, train_dataset, model, tokenizer)
         logger.info(
@@ -1048,7 +1068,7 @@ def main():
 
     # Evaluation
     results = {}
-    if args.do_eval and args.local_rank in [-1, 0]:
+    if (args.do_predict or args.do_eval) and args.local_rank in [-1, 0]:
         tokenizer = tokenizer_class.from_pretrained(
             args.output_dir, do_lower_case=args.do_lower_case
         )

@@ -19,6 +19,7 @@
 from __future__ import absolute_import, division, print_function
 
 import logging
+import os
 from dataclasses import dataclass
 from typing import List, Optional, Union
 
@@ -81,19 +82,26 @@ class TracProcessor(object):
     """def get_label_from_name(self, name):
         return label_dict[id]"""
 
-    def get_examples(self, data_dir, set_type):
+    def get_examples(
+        self, data_dir, set_type, folder_list=Optional[List[str]]
+    ):
         """Creates examples for the training and dev sets from labelled folder."""
 
         examples = []
-        for folder in self.folder_list:
+        if not folder_list:
+            folder_list = self.folder_list
+        for folder in folder_list:
             dataset_file = f"{data_dir}/{folder}/trac2_{folder}_{set_type}.csv"
+            if not os.path.exists(dataset_file):
+                print(dataset_file, "doesn't exist")
+                continue
             df = pd.read_csv(dataset_file)
             for _, row in df.iterrows():
                 example = InputExample(
                     guid=row["ID"],
                     text=row["Text"],
-                    label_a=row["Sub-task A"],
-                    label_b=row["Sub-task B"],
+                    label_a=row.get("Sub-task A"),
+                    label_b=row.get("Sub-task B"),
                     language=folder,
                 )
                 examples.append(example)
