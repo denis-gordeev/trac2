@@ -655,8 +655,7 @@ def load_and_cache_examples(args, task, tokenizer, mode):
         ]:
             # HACK(label indices are swapped in RoBERTa pretrained model)
             label_list[1], label_list[2] = label_list[2], label_list[1]
-        folder_list = args.folder_list
-        examples = processor.get_examples(args.data_dir, mode, folder_list)
+        examples = processor.get_examples(args.data_dir, mode, args.folder_list)
         features = convert_examples_to_features(
             examples,
             tokenizer,
@@ -1100,11 +1099,12 @@ def main():
             model.to(args.device)
             try:
                 result = evaluate(args, model, tokenizer, prefix=prefix)
-                result = dict(
-                    (k + "_{}".format(global_step), v)
-                    for k, v in result.items()
-                )
-                results.update(result)
+                if args.do_eval:
+                    result = dict(
+                        (k + "_{}".format(global_step), v)
+                        for k, v in result.items()
+                    )
+                    results.update(result)
             except Exception as ex:
                 print(ex, "main-evaluate")
                 traceback.print_stack()
