@@ -655,7 +655,7 @@ def load_and_cache_examples(args, task, tokenizer, mode):
         ]:
             # HACK(label indices are swapped in RoBERTa pretrained model)
             label_list[1], label_list[2] = label_list[2], label_list[1]
-        folder_list = args.get("folder_list")
+        folder_list = args.folder_list
         examples = processor.get_examples(args.data_dir, mode, folder_list)
         features = convert_examples_to_features(
             examples,
