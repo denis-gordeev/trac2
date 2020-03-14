@@ -563,17 +563,21 @@ def evaluate(args, model, tokenizer, prefix=""):
                             else None
                         )
                     outputs = model(**inputs)
-                    tmp_eval_loss, logits = outputs[:2]
+                    tmp_eval_loss, logits_a, logits_b = outputs[:3]
 
                     eval_loss += tmp_eval_loss.mean().item()
                 nb_eval_steps += 1
                 if preds is None:
-                    preds = logits.detach().cpu().numpy()
+                    preds_a = logits_a.detach().cpu().numpy()
+                    preds_b = logits_b.detach().cpu().numpy()
                     out_label_ids_a = inputs["labels_a"].detach().cpu().numpy()
                     out_label_ids_b = inputs["labels_b"].detach().cpu().numpy()
                 else:
-                    preds = np.append(
-                        preds, logits.detach().cpu().numpy(), axis=0
+                    preds_a = np.append(
+                        preds_a, logits_a.detach().cpu().numpy(), axis=0
+                    )
+                    preds_b = np.append(
+                        preds_b, logits_b.detach().cpu().numpy(), axis=0
                     )
                     out_label_ids_a = np.append(
                         out_label_ids_a,
@@ -590,13 +594,15 @@ def evaluate(args, model, tokenizer, prefix=""):
                 traceback.print_stack()
         try:
             eval_loss = eval_loss / nb_eval_steps
-            # if args.output_mode == "classification":
-            #     preds = np.argmax(preds, axis=1)
-            # elif args.output_mode == "regression":
-            #     preds = np.squeeze(preds)
+            if args.output_mode == "classification":
+                preds_a = np.argmax(preds_a, axis=1)
+                preds_b = np.argmax(preds_b, axis=1)
+            elif args.output_mode == "regression":
+                preds_a = np.squeeze(preds_a)
+                preds_b = np.squeeze(preds_b)
             if args.do_eval:
-                result_a = compute_metrics(eval_task, preds, out_label_ids_a)
-                result_b = compute_metrics(eval_task, preds, out_label_ids_b)
+                result_a = compute_metrics(eval_task, preds_a, out_label_ids_a)
+                result_b = compute_metrics(eval_task, preds_b, out_label_ids_b)
                 result_a = {k + "_a": v for k, v in result_a.items()}
                 result_b = {k + "_b": v for k, v in result_b.items()}
                 results.update(result_a)
@@ -616,8 +622,11 @@ def evaluate(args, model, tokenizer, prefix=""):
             output_test_predictions_file = os.path.join(
                 args.output_dir, "test_predictions.txt"
             )
-            with open(output_test_predictions_file, "w") as f:
-                str_preds = "\n".join([str(p) for p in preds])
+            with open("a_" +output_test_predictions_file, "w") as f:
+                str_preds = "\n".join([str(p) for p in preds_a])
+                f.write(str_preds)
+            with open("b_" +output_test_predictions_file, "w") as f:
+                str_preds = "\n".join([str(p) for p in preds_b])
                 f.write(str_preds)
         except Exception as ex:
             traceback.print_stack()
