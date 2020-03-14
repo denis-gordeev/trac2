@@ -540,7 +540,8 @@ def evaluate(args, model, tokenizer, prefix=""):
         logger.info("  Batch size = %d", args.eval_batch_size)
         eval_loss = 0.0
         nb_eval_steps = 0
-        preds = None
+        preds_a = None
+        preds_b = None
         out_label_ids = None
         for batch in tqdm(eval_dataloader, desc="Evaluating"):
             try:
@@ -567,7 +568,7 @@ def evaluate(args, model, tokenizer, prefix=""):
 
                     eval_loss += tmp_eval_loss.mean().item()
                 nb_eval_steps += 1
-                if preds is None:
+                if preds_a is None:
                     preds_a = logits_a.detach().cpu().numpy()
                     preds_b = logits_b.detach().cpu().numpy()
                     out_label_ids_a = inputs["labels_a"].detach().cpu().numpy()
@@ -619,15 +620,16 @@ def evaluate(args, model, tokenizer, prefix=""):
                     for key in sorted(result_b.keys()):
                         logger.info("  %s = %s", key, str(result_b[key]))
                         writer.write("%s = %s\n" % (key, str(result_b[key])))
-            output_test_predictions_file = os.path.join(
-                args.output_dir, "test_predictions.txt"
-            )
-            with open(output_test_predictions_file + "_a", "w") as f:
-                str_preds = "\n".join([str(p) for p in preds_a])
-                f.write(str_preds)
-            with open(output_test_predictions_file + "_b", "w") as f:
-                str_preds = "\n".join([str(p) for p in preds_b])
-                f.write(str_preds)
+            for letter, preds in (("_a", preds_a), ("_a", preds_a)):
+                output_test_predictions_file = os.path.join(
+                    args.output_dir, "test_predictions" +
+                    "_".join(args.folder_list) +
+                    letter +
+                    ".txt"
+                )
+                with open(output_test_predictions_file, "w") as f:
+                    str_preds = "\n".join([str(p) for p in preds])
+                    f.write(str_preds)
         except Exception as ex:
             traceback.print_stack()
             print("evaluation", ex)
