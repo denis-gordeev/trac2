@@ -626,7 +626,7 @@ def evaluate(args, model, tokenizer, prefix=""):
 
 
 def load_and_cache_examples(args, task, tokenizer, mode):
-    if args.local_rank not in [-1, 0] and not evaluate:
+    if args.local_rank not in [-1, 0] and not mode in ("dev", "test"):
         torch.distributed.barrier()  # Make sure only the first process in distributed training process the dataset, and the others will use the cache
 
     processor = processors[task]()

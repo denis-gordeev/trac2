@@ -196,8 +196,12 @@ def convert_examples_to_features(
         assert len(segment_ids) == max_seq_length
 
         if output_mode == "classification":
-            label_a = label_maps["a"][example.label_a]
-            label_b = label_maps["b"][example.label_b]
+            label_a = label_maps["a"].get(example.label_a)
+            label_b = label_maps["b"].get(example.label_b)
+            if label_a is None:
+                label_a = 0
+            if label_b is None:
+                label_b = 0
         elif output_mode == "regression":
             label_id = float(example.label)
         else:
