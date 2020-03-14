@@ -621,6 +621,8 @@ def evaluate(args, model, tokenizer, prefix=""):
                         logger.info("  %s = %s", key, str(result_b[key]))
                         writer.write("%s = %s\n" % (key, str(result_b[key])))
             for letter, preds in (("_a", preds_a), ("_b", preds_b)):
+                short_letter = letter[-1]
+                letter_preds = [label_list[short_letter][p] for p in preds]
                 output_test_predictions_file = os.path.join(
                     args.output_dir, "test_predictions" +
                     "_".join(args.folder_list) +
@@ -628,7 +630,7 @@ def evaluate(args, model, tokenizer, prefix=""):
                     ".txt"
                 )
                 with open(output_test_predictions_file, "w") as f:
-                    str_preds = "\n".join([str(p) for p in preds])
+                    str_preds = "\n".join([str(p) for p in letter_preds])
                     f.write(str_preds)
         except Exception as ex:
             traceback.print_stack()
