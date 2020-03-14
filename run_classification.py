@@ -431,7 +431,7 @@ def train(args, train_dataset, model, tokenizer):
                     ):  # Only evaluate when single GPU
                         # otherwise metrics may not average well
                         try:
-                            results = evaluate(args, model, tokenizer)
+                            results = evaluate(args, model, tokenizer,label_list,)
                         except Exception as ex:
                             print(ex, "train-evaluate")
                             traceback.print_stack()
@@ -497,7 +497,7 @@ def train(args, train_dataset, model, tokenizer):
     return global_step, tr_loss / global_step
 
 
-def evaluate(args, model, tokenizer, prefix=""):
+def evaluate(args, model, tokenizer, label_list, prefix=""):
     # Loop to handle MNLI double evaluation (matched, mis-matched)
     eval_task_names = (
         ("mnli", "mnli-mm") if args.task_name == "mnli" else (args.task_name,)
@@ -1111,7 +1111,7 @@ def main():
             model = MultiHeadClassification.from_pretrained(checkpoint)
             model.to(args.device)
             try:
-                result = evaluate(args, model, tokenizer, prefix=prefix)
+                result = evaluate(args, model, tokenizer,label_list, prefix=prefix)
                 if args.do_eval:
                     result = dict(
                         (k + "_{}".format(global_step), v)
