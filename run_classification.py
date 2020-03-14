@@ -622,10 +622,10 @@ def evaluate(args, model, tokenizer, prefix=""):
             output_test_predictions_file = os.path.join(
                 args.output_dir, "test_predictions.txt"
             )
-            with open("a_" +output_test_predictions_file, "w") as f:
+            with open(output_test_predictions_file + "_a", "w") as f:
                 str_preds = "\n".join([str(p) for p in preds_a])
                 f.write(str_preds)
-            with open("b_" +output_test_predictions_file, "w") as f:
+            with open(output_test_predictions_file + "_b", "w") as f:
                 str_preds = "\n".join([str(p) for p in preds_b])
                 f.write(str_preds)
         except Exception as ex:
