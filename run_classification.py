@@ -594,12 +594,12 @@ def evaluate(args, model, tokenizer, prefix=""):
                 traceback.print_stack()
         try:
             eval_loss = eval_loss / nb_eval_steps
-            if args.output_mode == "classification":
-                preds_a = np.argmax(preds_a, axis=1)
-                preds_b = np.argmax(preds_b, axis=1)
-            elif args.output_mode == "regression":
-                preds_a = np.squeeze(preds_a)
-                preds_b = np.squeeze(preds_b)
+            # if args.output_mode == "classification":
+            #     preds_a = np.argmax(preds_a, axis=1)
+            #     preds_b = np.argmax(preds_b, axis=1)
+            # elif args.output_mode == "regression":
+            #     preds_a = np.squeeze(preds_a)
+            #     preds_b = np.squeeze(preds_b)
             if args.do_eval:
                 result_a = compute_metrics(eval_task, preds_a, out_label_ids_a)
                 result_b = compute_metrics(eval_task, preds_b, out_label_ids_b)
