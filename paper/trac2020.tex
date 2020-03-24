@@ -1,0 +1,113 @@
+% TRAC 2020 paper template for Ms8qQxMbnjJMgYcw
+\documentclass[10pt, a4paper]{article}
+\usepackage{lrec}
+%\newcites{languageresource}{Language Resources}
+\usepackage{graphicx}
+\usepackage{tabularx}
+\usepackage{soul}
+% for eps graphics
+%%% References and Labels
+%%% Reference labels without a punctuation 
+% courtesy of Marc Schulder , uni Hamburg ****************
+\usepackage{titlesec}
+\titleformat{\section}{\normalfont\large\bf\center}{\thesection.}{1em}{}
+\titleformat{\subsection}{\normalfont\SmallTitleFont\bf\raggedright}{\thesubsection.}{1em}{}
+\titleformat{\subsubsection}{\normalfont\normalsize\bf\raggedright}{\thesubsubsection.}{1em}{}
+\renewcommand\thesection{\arabic{section}}
+\renewcommand\thesubsection{\thesection.\arabic{subsection}}
+\renewcommand\thesubsubsection{\thesubsection.\arabic{subsubsection}}
+%  ed 
+
+\usepackage{epstopdf}
+\usepackage[utf8]{inputenc}
+
+\usepackage{hyperref}
+\usepackage{xstring}
+
+\usepackage{color}
+
+\newcommand{\secref}[1]{\StrSubstitute{\getrefnumber{#1}}{.}{ }}
+
+\title{{BERT of all trades, master of some}}
+% 
+% one BERT to classify them all
+
+\name{Author1, Author2, Author3}
+
+\address{Affiliation1, Affiliation2, Affiliation3 \\
+         Address1, Address2, Address3 \\
+         author1@xxx.yy, author2@zzz.edu, author3@hhh.com\\
+         \{author1, author5, author9\}@abc.org\\}
+
+
+\abstract{
+This paper describes our results for TRAC 2020 competition held together with the conference LREC 2020. Competition consisted of 2 subtasks where participants had to classify aggression in texts and decide if it is gendered or not for 3 languages: Benghali, English and Hindi. We used a single BERT-based system with two outputs for all tasks simultaneously. Our model took the first place in English gendered text classification and the second place in Bengali gendered text classification.\\ \newline
+\Keywords{aggression, classification, BERT, neural network, Transformer, NLP} }
+
+\begin{document}
+
+\maketitleabstract
+
+
+\section{Introduction}
+\label{intro}
+This paper is devoted to our system's solution for TRAC 2020 competition held together LREC 2020 conference. TRAC competition consisted of 2 sub-tasks in 3 languages: Bengali, English and Hindi. In the first sub-task contestants needed to make a system that labeled texts into three classes: ‘Overtly Aggressive’, ‘Covertly Aggressive’ and ‘Non-aggressive’. The dataset contained 5000 texts in total.
+
+We used a single BERT-based system with two outputs for all tasks simultaneously. Our model took the first place in English gendered text classification and the second place in Bengali gendered text classification.
+
+\section{Related Work}
+TRAC
+
+Offensive val
+
+Potapova
+
+2 Kaggle challenges.
+
+Text classification approaches.
+
+Single model in machine translation by Google
+\section{TRAC-2 dataset}
+TRAC 2020 competition contained 5000 texts in 3 languages: Bengali, English and Hindi.
+
+The authors of the competition split texts in all languages into training, validation and test datasets.
+\section{BERT model with multiple outputs}
+In this task we wanted to experiment with a single model that works with multiple languages at once. We could have used an embedding-based approach [Word2Vec, FastText]. However, pre-trained language models are usually trained for one language at a time.  Fortunately, it is possible to overcome this using multilingual language models such as BERT.
+
+BERT \cite{bert} is a Transformer-based model \cite{attention}. It was trained using Wikipedia texts. All texts were tokenized using byte-pair encoding (BPE) which allows to limit the vocabulary size compared to Word2vec and other word vector models. The training consisted in predicting a random masked token in the sentence and the next sentence. We did not fine tune the language model. Information about the text language was not included into the model. The model had to infer it itself. We did not perform any text augmentation or pre-processing besides standard byte-pair encoding.
+We used a multilingual uncased BERT model provided by Hugging Face \cite{Wolf2019HuggingFacesTS}. We used PyTorch framework to create our model.
+
+Half precision training was used vi Apex library.
+
+We used the same training, validation and test datasets as they were provided by the organizers.
+\section{Results}
+\label{sec:results}
+
+\begin{table}[h]
+\begin{tabular}{|llll|}
+\hline
+\bf Task & \bf F1 (weighted) & \bf Accuracy & \bf Rank\\ 
+\hline
+%%%%
+\hline
+Bengali-A & 0.7716 & 0.7811 & 4\\  \hline
+Bengali-B & 0.9297 & 0.9293 & 2\\  \hline
+English-A & 0.7568 & 0.7683 & 3\\ \hline
+English-B & 0.8716 & 0.8708 & 1\\ \hline
+Hindi-A & 0.7761 & 0.7683 & 4\\  \hline
+Hindi-B & 0.8381 & 0.8392 & 3\\  \hline
+\end{tabular}
+%TODO : you should write a descriptive caption
+\caption{Results for all tasks}
+\label{tab:results}
+\end{table}
+
+\section{Conclusion}
+This paper describes our results for TRAC 2020 competition held together with the conference LREC 2020. Competition consisted of 2 subtasks where participants had to classify aggression in texts and decide if it is gendered or not for 3 languages: Benghali, English and Hindi. We used a single BERT-based system with two outputs for all tasks simultaneously. Our model took the first place in English gendered text classification and the second place in Bengali gendered text classification.
+
+\section{References}
+\bibliography{trac2020}
+\bibliographystyle{lrec}
+
+
+\end{document}

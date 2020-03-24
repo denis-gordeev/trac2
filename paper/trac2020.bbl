@@ -1,0 +1,27 @@
+\begin{thebibliography}{}
+
+\bibitem[\protect\citename{Devlin \bgroup et al.\egroup }2018]{bert}
+Devlin, J., Chang, M.-W., Lee, K., and Toutanova, K.
+\newblock (2018).
+\newblock {BERT: Pre-training of Deep Bidirectional Transformers for Language
+  Understanding}.
+\newblock oct.
+
+\bibitem[\protect\citename{Vaswani \bgroup et al.\egroup }2017]{attention}
+Vaswani, A., Shazeer, N., Parmar, N., Uszkoreit, J., Jones, L., Gomez, A.~N.,
+  Kaiser, {\L}., and Polosukhin, I.
+\newblock (2017).
+\newblock {Attention is all you need}.
+\newblock In {\em Adv. Neural Inf. Process. Syst.}, volume 2017-Decem, pages
+  5999--6009.
+
+\bibitem[\protect\citename{Wolf \bgroup et al.\egroup
+  }2019]{Wolf2019HuggingFacesTS}
+Wolf, T., Debut, L., Sanh, V., Chaumond, J., Delangue, C., Moi, A., Cistac, P.,
+  Rault, T., Louf, R., Funtowicz, M., and Brew, J.
+\newblock (2019).
+\newblock {HuggingFace's Transformers: State-of-the-art Natural Language
+  Processing}.
+\newblock {\em ArXiv}, abs/1910.0.
+
+\end{thebibliography}

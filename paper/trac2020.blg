@@ -1,0 +1,48 @@
+This is BibTeX, Version 0.99d (TeX Live 2015/Debian)
+Capacity: max_strings=35307, hash_size=35307, hash_prime=30011
+The top-level auxiliary file: trac2020.aux
+The style file: lrec.bst
+Database file #1: trac2020.bib
+Warning--empty journal in bert
+You've used 3 entries,
+            2667 wiz_defined-function locations,
+            588 strings with 5336 characters,
+and the built_in function-call counts, 1751 in all, are:
+= -- 164
+> -- 124
+< -- 2
++ -- 46
+- -- 46
+* -- 154
+:= -- 299
+add.period$ -- 12
+call.type$ -- 3
+change.case$ -- 35
+chr.to.int$ -- 3
+cite$ -- 4
+duplicate$ -- 57
+empty$ -- 91
+format.name$ -- 49
+if$ -- 344
+int.to.chr$ -- 1
+int.to.str$ -- 0
+missing$ -- 3
+newline$ -- 21
+num.names$ -- 9
+pop$ -- 36
+preamble$ -- 1
+purify$ -- 38
+quote$ -- 0
+skip$ -- 51
+stack$ -- 0
+substring$ -- 55
+swap$ -- 18
+text.length$ -- 2
+text.prefix$ -- 0
+top$ -- 0
+type$ -- 24
+warning$ -- 1
+while$ -- 9
+width$ -- 5
+write$ -- 44
+(There was 1 warning)
