@@ -7,6 +7,13 @@ Devlin, J., Chang, M.-W., Lee, K., and Toutanova, K.
   Understanding}.
 \newblock oct.
 
+\bibitem[\protect\citename{Kumar \bgroup et al.\egroup }2018]{trac2018report}
+Kumar, R., Ojha, A.~K., Malmasi, S., and Zampieri, M.
+\newblock (2018).
+\newblock {Benchmarking Aggression Identification in Social Media}.
+\newblock In {\em Proc. First Work. Trolling, Aggress. Cyberbulling}, Santa Fe,
+  USA.
+
 \bibitem[\protect\citename{Vaswani \bgroup et al.\egroup }2017]{attention}
 Vaswani, A., Shazeer, N., Parmar, N., Uszkoreit, J., Jones, L., Gomez, A.~N.,
   Kaiser, {\L}., and Polosukhin, I.
@@ -23,5 +30,12 @@ Wolf, T., Debut, L., Sanh, V., Chaumond, J., Delangue, C., Moi, A., Cistac, P.,
 \newblock {HuggingFace's Transformers: State-of-the-art Natural Language
   Processing}.
 \newblock {\em ArXiv}, abs/1910.0.
+
+\bibitem[\protect\citename{Zampieri \bgroup et al.\egroup }2019]{offenseval}
+Zampieri, M., Malmasi, S., Nakov, P., Rosenthal, S., Farra, N., and Kumar, R.
+\newblock (2019).
+\newblock {SemEval-2019 Task 6: Identifying and Categorizing Offensive Language
+  in Social Media (OffensEval)}.
+\newblock In {\em Proc. 13th Int. Work. Semant. Eval.}
 
 \end{thebibliography}

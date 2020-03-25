@@ -41,7 +41,7 @@
 
 
 \abstract{
-This paper describes our results for TRAC 2020 competition held together with the conference LREC 2020. Competition consisted of 2 subtasks where participants had to classify aggression in texts and decide if it is gendered or not for 3 languages: Benghali, English and Hindi. We used a single BERT-based system with two outputs for all tasks simultaneously. Our model took the first place in English gendered text classification and the second place in Bengali gendered text classification.\\ \newline
+This paper describes our results for TRAC 2020 competition held together with the conference LREC 2020. Competition consisted of 2 subtasks in 3 languages each (Benghali, English and Hindi) where the participants' task was to classify aggression in short texts from social media and decide if it is gendered or not. We used a single BERT-based system with two outputs for all tasks simultaneously. Our model took the first place in English gendered text classification and the second place in Bengali gendered text classification.\\ \newline
 \Keywords{aggression, classification, BERT, neural network, Transformer, NLP} }
 
 \begin{document}
@@ -51,30 +51,43 @@ This paper describes our results for TRAC 2020 competition held together with th
 
 \section{Introduction}
 \label{intro}
-This paper is devoted to our system's solution for TRAC 2020 competition held together LREC 2020 conference. TRAC competition consisted of 2 sub-tasks in 3 languages: Bengali, English and Hindi. In the first sub-task contestants needed to make a system that labeled texts into three classes: ‘Overtly Aggressive’, ‘Covertly Aggressive’ and ‘Non-aggressive’. The dataset contained 5000 texts in total.
+This paper is devoted to our system's solution for TRAC 2020 competition held together with LREC 2020 conference. TRAC 2020 competition consisted of 2 sub-tasks in 3 languages: Bengali, English and Hindi. In the first sub-task contestants needed to make a system that labeled texts into three classes: ‘Overtly Aggressive’, ‘Covertly Aggressive’ and ‘Non-aggressive’. In the second task the contestants' task was to label the same texts as gendered or not. The dataset contained 18681 texts in total, approximately 6000 texts for each language.
 
-We used a single BERT-based system with two outputs for all tasks simultaneously. Our model took the first place in English gendered text classification and the second place in Bengali gendered text classification.
+We used a single BERT-based system with two outputs for all subtasks and languages simultaneously. Our model took the first place in English gendered text classification and the second place in Bengali gendered text classification.
 
 \section{Related Work}
-TRAC
+Aggression and misogyny detection is a rampant problem nowadays on the Internet. Many research initiatives have been devoted to its investigation. Given the overwhelming amount of information that social media users output every second, it is incomprehensible to monitor and moderate all of it manually. So it becomes useful to make at least semi-automatic predictions about whether a message contains aggression. Shared tasks and competitions are of great utility in this task because they provide data that can be used to research into new ways of aggression expression and allow different methods to be compared in a uniform and impartial way. Among such competitions we can name the previous TRAC competition \cite{trac2018report} and Offenseval \cite{offenseval}. The first TRAC shared task on aggression identification was devoted to a 3-way classification in between ‘Overtly Aggressive’, ‘Covertly Aggressive’ and ‘Non-aggressive’ Facebook text data in Hindi and English. Offenseval was very similar in nature but in contained texts only in English. It consisted of 3 subtasks: binary offense identification, binary categorization of offense types and offense target classification.
 
-Offensive val
+Private initiatives also do not keep out of this problem. For example, there were held several challenges on machine learning competition platform Kaggle devoted to aggression investigation in social media, among them: Jigsaw Toxic Comment Classification Challenge and Jigsaw Unintended Bias in Toxicity Classification.
 
-Potapova
+Most researchers treat the problem of aggression detection as a classification problem. [POTAPOVA AND GORDEEV]. other mentions. The best solutions at Kaggle.
 
-2 Kaggle challenges.
-
-Text classification approaches.
-
-Single model in machine translation by Google
+There are few competitions that have the data labelled in several languages at the same time. Thus, it might be troublesome to compare a single model for all languages to a special model dedicated to each language. However, [TRAC?]. Single model in machine translation by Google.
 \section{TRAC-2 dataset}
 TRAC 2020 competition contained 5000 texts in 3 languages: Bengali, English and Hindi.
 
 The authors of the competition split texts in all languages into training, validation and test datasets.
-\section{BERT model with multiple outputs}
-In this task we wanted to experiment with a single model that works with multiple languages at once. We could have used an embedding-based approach [Word2Vec, FastText]. However, pre-trained language models are usually trained for one language at a time.  Fortunately, it is possible to overcome this using multilingual language models such as BERT.
+\begin{table}[h]
+	\begin{tabular}{|l|lll|}
+		\hline
+		\bf Dataset & \bf English & \bf Hindi & \bf Bengali\\ 
+		\hline
+		%%%%
+		\hline
+\bf Train & 	  4263 & 3984 & 3826\\  \hline
+\bf Development & 1066 & 997  & 957\\  \hline
+\bf Test & 		  1200 & 1200 & 1188\\ \hline\hline
+\bf Total &       6529 & 6181 & 5971\\ \hline
+	\end{tabular}
+	%TODO : you should write a descriptive caption
+	\caption{Number of texts for each language and dataset}
+	\label{tab:dataset}
+\end{table}
 
-BERT \cite{bert} is a Transformer-based model \cite{attention}. It was trained using Wikipedia texts. All texts were tokenized using byte-pair encoding (BPE) which allows to limit the vocabulary size compared to Word2vec and other word vector models. The training consisted in predicting a random masked token in the sentence and the next sentence. We did not fine tune the language model. Information about the text language was not included into the model. The model had to infer it itself. We did not perform any text augmentation or pre-processing besides standard byte-pair encoding.
+\section{BERT model with multiple outputs}
+In this task we wanted to experiment with a single model that works with multiple languages at once. We could have used an embedding-based approach [Word2Vec, FastText]. However, pre-trained language models are usually trained for one language at a time.  Fortunately, it is possible to overcome this using multilingual language models such as BERT \cite{bert}.
+
+BERT is a Transformer-based model \cite{attention}. It was trained using Wikipedia texts. All texts were tokenized using byte-pair encoding (BPE) which allows to limit the vocabulary size compared to Word2vec and other word vector models. The training consisted in predicting a random masked token in the sentence and the next sentence. We did not fine tune the language model. Information about the text language was not included into the model. The model had to infer it itself. We did not perform any text augmentation or pre-processing besides standard byte-pair encoding.
 We used a multilingual uncased BERT model provided by Hugging Face \cite{Wolf2019HuggingFacesTS}. We used PyTorch framework to create our model.
 
 Half precision training was used vi Apex library.
