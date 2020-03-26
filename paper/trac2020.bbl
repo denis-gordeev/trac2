@@ -1,5 +1,13 @@
 \begin{thebibliography}{}
 
+\bibitem[\protect\citename{Aroyehun and Gelbukh}2018]{Aroyehun}
+Aroyehun, S.~T. and Gelbukh, A.
+\newblock (2018).
+\newblock {Aggression Detection in Social Media: Using Deep Neural Networks,
+  Data Augmentation, and Pseudo Labeling}.
+\newblock {\em Proc. First Work. Trolling, Aggress. Cyberbullying}, pages
+  90--97.
+
 \bibitem[\protect\citename{Devlin \bgroup et al.\egroup }2018]{bert}
 Devlin, J., Chang, M.-W., Lee, K., and Toutanova, K.
 \newblock (2018).
@@ -7,12 +15,33 @@ Devlin, J., Chang, M.-W., Lee, K., and Toutanova, K.
   Understanding}.
 \newblock oct.
 
+\bibitem[\protect\citename{Gordeev}2016]{gordeev2016}
+Gordeev, D.
+\newblock (2016).
+\newblock {Detecting state of aggression in sentences using cnn}.
+\newblock In {\em Lect. Notes Comput. Sci. (including Subser. Lect. Notes
+  Artif. Intell. Lect. Notes Bioinformatics)}, volume 9811 LNCS, pages
+  240--245.
+
+\bibitem[\protect\citename{Joulin \bgroup et al.\egroup }2016]{fasttext}
+Joulin, A., Grave, E., Bojanowski, P., and Mikolov, T.
+\newblock (2016).
+\newblock {Bag of Tricks for Efficient Text Classification}.
+\newblock jul.
+
 \bibitem[\protect\citename{Kumar \bgroup et al.\egroup }2018]{trac2018report}
 Kumar, R., Ojha, A.~K., Malmasi, S., and Zampieri, M.
 \newblock (2018).
 \newblock {Benchmarking Aggression Identification in Social Media}.
 \newblock In {\em Proc. First Work. Trolling, Aggress. Cyberbulling}, Santa Fe,
   USA.
+
+\bibitem[\protect\citename{Mikolov \bgroup et al.\egroup }2013]{word2vec}
+Mikolov, T., Chen, K., Corrado, G., and Dean, J.
+\newblock (2013).
+\newblock {Efficient estimation of word representations in vector space}.
+\newblock In {\em Proc. Int. Conf. Learn. Represent. (ICLR 2013)}, pages 1--12,
+  jan.
 
 \bibitem[\protect\citename{Vaswani \bgroup et al.\egroup }2017]{attention}
 Vaswani, A., Shazeer, N., Parmar, N., Uszkoreit, J., Jones, L., Gomez, A.~N.,
