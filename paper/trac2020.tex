@@ -1,10 +1,11 @@
-% TRAC 2020 paper template for Ms8qQxMbnjJMgYcw
+\def\DevnagVersion{2.15}\def\DevnagVersion{2.15}\def\DevnagVersion{2.15}\def\DevnagVersion{2.15}\def\DevnagVersion{2.15}% TRAC 2020 paper template for Ms8qQxMbnjJMgYcw
 \documentclass[10pt, a4paper]{article}
 \usepackage{lrec}
 %\newcites{languageresource}{Language Resources}
 \usepackage{graphicx}
 \usepackage{tabularx}
 \usepackage{soul}
+\usepackage{devanagari}
 \usepackage{float}
 \usepackage[draft]{hyperref}
 % for eps graphics
@@ -64,7 +65,7 @@ Private initiatives also do not keep out of this problem. For example, there wer
 
 There are few competitions that have the data labelled in several languages at the same time. However, we can see the progress in machine translation for inspiration. Single model in machine translation by Google.
 \section{TRAC-2 dataset}
-TRAC 2020 competition contained 5000 texts in 3 languages: Bengali, English and Hindi. Hindi and Bengali texts could be written both in Roman and Bangla or Devanagari script within a single text. Moreover, many texts were written in two languages at the same time.
+TRAC 2020 competition contained around 18000 texts in 3 languages (see Table \ref{tab:dataset}): Bengali, English and Hindi. Hindi and Bengali texts could be written both in Roman and Bangla or Devanagari script within a single text (see Table \ref{tab:examples}). Moreover, many texts were written in two languages at the same time.
 
 The authors of the competition split texts in all languages into training, validation and test datasets.
 \begin{table}[h]
@@ -84,6 +85,23 @@ The authors of the competition split texts in all languages into training, valid
 	\label{tab:dataset}
 \end{table}
 
+\begin{table}[h]
+	\begin{tabular}{|l|c|}
+		\hline
+		\bf Language & \bf Examples \\ \hline \hline
+		\bf{Bengali} & best giris jain a katha \\ \hline
+		\bf English & no gay gene discovered recently\\ \hline
+		\bf Hindi & Negative positive {\dn dono.m} h sir \\ \hline
+		\bf Hindi & Please logic mat ghusao \\ \hline
+		
+	\end{tabular}
+	\caption{Examples for different languages.}
+	\label{tab:examples}
+\end{table}
+
+Each text had one label for each of the subtasks. The first subtask was a 3-way classification of aggression in social media texts. The classes were ‘Overtly Aggressive’, ‘Covertly Aggressive’ and ‘Non-aggressive’. The second task was a binary classification between "gendered" and "not gendered" texts.
+
+[Train/dev class distribution]
 \section{BERT model with multiple outputs}
 
 \begin{figure}[tbh]
@@ -96,10 +114,15 @@ The authors of the competition split texts in all languages into training, valid
 
 In this task we wanted to experiment with a single model that works with multiple languages at once. We could have used an embedding-based approach with Word2Vec \cite{word2vec} or FastText \cite{fasttext} input and a neural network classifier to classify aggression in texts \cite{gordeev2016}. However, pre-trained language models are usually trained for one language at a time and either require augmentation via back-translation \cite{Aroyehun} or training a new word embedding model for several languages at once. Fortunately, it is possible to overcome this using multilingual language models such as BERT \cite{bert}.
 
-BERT is a Transformer-based model \cite{attention}. We used a multilingual uncased BERT model provided by Hugging Face \cite{Wolf2019HuggingFacesTS}. We used PyTorch framework to create our model. BERT was trained using Wikipedia texts in more than 100 languages. All texts were tokenized using byte-pair encoding (BPE) which allows to limit the vocabulary size compared to Word2vec and other word vector models. The training consisted in predicting a random masked token in the sentence and a binary next sentence prediction. We did not fine tune the language model using the text data provided by the organizers. Information about the text language was not included into the model. We also did not perform any text augmentation or pre-processing besides standard byte-pair encoding. Texts shorter than 512 tokens were padded with zeroes. All tokens excluding special ones were masked with ones, while all other tokens were masked with zeroes.
-Half precision training was used vi Apex library.
+BERT is a Transformer-based model \cite{attention}. We used a multilingual uncased BERT model provided by Hugging Face \cite{Wolf2019HuggingFacesTS}. We used PyTorch framework to create our model. BERT was trained using Wikipedia texts in more than 100 languages. All texts were tokenized using byte-pair encoding (BPE) which allows to limit the vocabulary size compared to Word2vec and other word vector models. The training consisted in predicting a random masked token in the sentence and a binary next sentence prediction. We did not fine tune the language model using the text data provided by the organizers. Information about the text language was not included into the model. We also did not perform any text augmentation or pre-processing besides standard byte-pair encoding. All texts longer than 510 tokens were truncated. Two tokens marking the beginning and the end of the sequence were added to each input text ("[CLS]" and "[SEP]"). Texts shorter than 510 tokens were padded with zeroes. All tokens excluding special ones were masked with ones, while all other tokens were masked with zeroes.
 
-We used the same training, validation and test datasets as they were provided by the organizers.
+On top of BERT we added a Dropout layer to fight overfitting. The Dropout probability was equal to 0.1. On top of the Dropout Layer two softmax layers were added for each of the subtasks. Their dimensions were 3 and 2 respectively, equal to the number of classes. Target values were one-hot encoded. All texts were selected randomly out of the training and validation datasets. Cross entropy loss function was used for each of the outputs. The final loss function was calculated just as the sum of these two output losses.
+%$$
+%\mathcal{L} = - \sum^{3}_{i}{Y_ilog(\hat{y_i})} - \sum^{2}_{i}{y_ilog(\hat{y_i})}
+%$$
+Half precision training was used vi Apex library \footnote{https://github.com/NVIDIA/apex}. We used a single Nvidia V100 GPU to train our model. The training batch size was made equal to 16. The model was trained for 10 epochs.
+
+We used the same training, validation and test datasets as they were provided by the organizers. The validation data was applied only to hyperparameter tuning and was not included into the training dataset.
 
 
 \section{Results}
@@ -124,6 +147,7 @@ Hindi-B & 0.8381 & 0.8392 & 3\\  \hline
 \label{tab:results}
 \end{table}
 
+The results of our system are provided in Table \ref{tab:results}. All in all we took the first place in gendered classification for English and the second place for the same task in Bengali. The results of our model were better for binary gendered classification than for 3-way aggression labelling. It might be due to the fact that we did not weight our loss function and both tasks contributed equally to the result. While it might be a better idea to give more emphasis to the target that has more potential values. We also did not use any early stopping or other similar techniques. The model was trained only for 3 epochs. A more challenging task might require more epochs to converge, thus, in future research we will also check the balance for early stopping between two tasks. Moreover, we could have enhanced subtask predictions by using values inferred by our model. We hope to also try it in future research.
 \section{Conclusion}
 This paper describes our results for TRAC 2020 competition held together with the conference LREC 2020. Competition consisted of 2 subtasks where participants had to classify aggression in texts and decide if it is gendered or not for 3 languages: Benghali, English and Hindi. We used a single BERT-based system with two outputs for all tasks simultaneously. Our model took the first place in English gendered text classification and the second place in Bengali gendered text classification.
 
